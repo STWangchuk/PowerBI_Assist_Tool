@@ -1,4 +1,11 @@
-
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>PBIP Toolkit – Thin report &amp; Transplant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root{
@@ -13,23 +20,21 @@
     --measure:#C084FC;
     --action:#FF7A45;
     --good:#4ADE80;
+    --bad:#F87171;
     --mono: 'IBM Plex Mono', 'SF Mono', Menlo, Consolas, monospace;
     --sans: 'Inter', -apple-system, sans-serif;
   }
   *{box-sizing:border-box;}
-  body{
-    margin:0; background:var(--bg); color:var(--text);
-    font-family:var(--sans); font-size:14px; min-height:100vh;
-  }
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+  body{ margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); font-size:14px; min-height:100vh; }
+  a{ color:var(--page); }
 
   .app{ display:flex; min-height:100vh; }
 
   /* ---------- Sidebar ---------- */
   .sidebar{
-    width:290px; flex-shrink:0; background:var(--panel);
+    width:300px; flex-shrink:0; background:var(--panel);
     border-right:1px solid var(--border); padding:20px;
-    display:flex; flex-direction:column; gap:16px;
+    display:flex; flex-direction:column; gap:14px;
   }
   .brand{ font-family:var(--mono); font-size:13px; letter-spacing:.04em; color:var(--muted); text-transform:uppercase; }
   .brand b{ color:var(--text); font-weight:600; }
@@ -43,42 +48,35 @@
   .mode-tab.active{ background:var(--action); color:#1a0e08; }
   .mode-tab:not(.active):hover{ color:var(--text); }
 
-  .mode-panel{ display:flex; flex-direction:column; gap:14px; }
-
   .drop{
-    border:1.5px dashed var(--border); border-radius:8px; padding:18px 14px;
+    display:block; border:1.5px dashed var(--border); border-radius:8px; padding:12px 12px;
     text-align:center; cursor:pointer; transition:border-color .15s, background .15s;
   }
   .drop:hover{ border-color:var(--action); background:rgba(255,122,69,.05); }
-  .drop.small{ padding:12px 10px; }
-  .drop svg{ opacity:.6; margin-bottom:6px; }
   .drop-label{ font-weight:600; font-size:13px; }
-  .drop-sub{ color:var(--muted); font-size:11.5px; margin-top:3px; }
+  .drop-sub{ color:var(--muted); font-size:11.5px; margin-top:3px; line-height:1.4; }
   .drop.filled{ border-style:solid; border-color:var(--good); background:rgba(74,222,128,.05); }
   input[type=file]{ display:none; }
-
-  .summary{ display:flex; flex-direction:column; gap:8px; font-family:var(--mono); font-size:12px; }
-  .summary-row{ display:flex; justify-content:space-between; color:var(--muted); }
-  .summary-row b{ color:var(--text); font-weight:600; }
-  .root-path{
-    background:var(--panel-2); border:1px solid var(--border); border-radius:6px;
-    padding:8px 10px; font-family:var(--mono); font-size:11px; color:var(--muted);
-    word-break:break-all; line-height:1.5;
-  }
 
   .mini-summary{
     background:var(--panel-2); border:1px solid var(--border); border-radius:6px;
     padding:9px 10px; font-family:var(--mono); font-size:11px; color:var(--muted); margin-top:-6px;
   }
   .mini-summary .name{ color:var(--text); font-weight:600; font-family:var(--sans); font-size:12px; margin-bottom:4px; word-break:break-all; }
-  .mini-summary .mini-row{ display:flex; justify-content:space-between; }
+  .mini-summary .mini-row{ display:flex; justify-content:space-between; gap:8px; }
+  .mini-summary .mini-row b{ color:var(--text); font-weight:600; text-align:right; }
+  .mini-summary .good{ color:var(--good); }
+  .mini-summary .bad{ color:var(--bad); }
 
-  .filter{
+  .filter, .text-in{
     background:var(--panel-2); border:1px solid var(--border); border-radius:6px;
     padding:8px 10px; color:var(--text); font-family:var(--sans); font-size:13px; width:100%;
   }
-  .filter:focus{ outline:1px solid var(--action); border-color:var(--action); }
-  .filter::placeholder{ color:var(--muted); }
+  .filter:focus, .text-in:focus{ outline:1px solid var(--action); border-color:var(--action); }
+  .filter::placeholder, .text-in::placeholder{ color:var(--muted); }
+
+  .opts{ display:flex; flex-direction:column; gap:8px; }
+  .opts-title{ font-size:12px; font-weight:600; color:var(--muted); }
 
   .sidebar-footer{ margin-top:auto; color:var(--muted); font-size:11px; line-height:1.5; padding-top:8px; }
 
@@ -87,7 +85,7 @@
   .topbar{
     position:sticky; top:0; z-index:5; background:rgba(15,17,21,.92); backdrop-filter:blur(6px);
     border-bottom:1px solid var(--border); padding:14px 24px;
-    display:flex; align-items:center; gap:16px;
+    display:flex; align-items:center; gap:12px;
   }
   .topbar h1{ font-size:15px; margin:0; font-weight:600; }
   .topbar .sel-count{ color:var(--muted); font-size:13px; font-family:var(--mono); }
@@ -109,34 +107,32 @@
     min-height:60vh; color:var(--muted); text-align:center; gap:10px;
   }
   .empty h2{ color:var(--text); font-weight:600; font-size:16px; margin:0; }
-  .empty p{ max-width:420px; margin:0; font-size:13px; line-height:1.6; }
+  .empty p{ max-width:480px; margin:0; font-size:13px; line-height:1.6; }
 
   .section{ margin-bottom:28px; }
   .section-head{
     display:flex; align-items:center; gap:10px; margin-bottom:10px;
     padding-bottom:8px; border-bottom:1px solid var(--border);
   }
-  .section-head h3{ font-size:12px; text-transform:uppercase; letter-spacing:.06em; margin:0; color:var(--muted); font-weight:600; }
+  .section-head h3{ font-size:13px; margin:0; color:var(--muted); font-weight:600; }
 
-  .page-group{ margin-bottom:4px; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--panel); }
+  .page-group{ margin-bottom:8px; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--panel); }
   .row{
     display:flex; align-items:center; gap:10px; padding:9px 12px; cursor:pointer;
     border-bottom:1px solid transparent; transition:background .1s;
   }
-  .row:hover{ background:var(--panel-2); }
+  .row.static{ cursor:default; }
+  .row:not(.static):hover{ background:var(--panel-2); }
   .row.page-row{ background:var(--panel-2); font-weight:600; }
   .row input[type=checkbox]{ accent-color:var(--action); width:14px; height:14px; flex-shrink:0; }
   .row .label{ font-size:13px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-  .row .badge{
-    font-family:var(--mono); font-size:9px; text-transform:uppercase; letter-spacing:.05em;
-    padding:2px 6px; border-radius:3px; flex-shrink:0;
-  }
+  .row .badge{ font-family:var(--mono); font-size:10px; padding:2px 6px; border-radius:3px; flex-shrink:0; }
   .badge.page{ background:rgba(91,157,255,.15); color:var(--page); }
   .badge.bookmark{ background:rgba(255,180,84,.15); color:var(--bookmark); }
   .badge.measure{ background:rgba(192,132,252,.15); color:var(--measure); }
   .row .meta{ margin-left:auto; color:var(--muted); font-size:11px; font-family:var(--mono); flex-shrink:0; }
   .row .tag{
-    margin-left:auto; font-family:var(--mono); font-size:9.5px; text-transform:uppercase; letter-spacing:.04em;
+    margin-left:auto; font-family:var(--mono); font-size:10px;
     padding:2px 6px; border-radius:3px; background:rgba(255,180,84,.12); color:var(--bookmark); flex-shrink:0;
   }
   .row .tag.warn{ background:rgba(255,122,69,.15); color:var(--action); }
@@ -146,12 +142,21 @@
     margin-bottom:20px; font-size:12.5px; color:var(--muted); line-height:1.6;
   }
   .info-card b{ color:var(--text); }
+  .info-card.warn{ border-color:rgba(255,122,69,.55); }
+  .info-card.bad{ border-color:rgba(248,113,113,.6); }
+  .info-card.good{ border-color:rgba(74,222,128,.5); }
+  .info-card h4{ margin:0 0 6px; font-size:13px; color:var(--text); }
+  .info-card ul{ margin:6px 0 4px; padding-left:18px; }
+  .info-card li{ margin-bottom:4px; }
+  .info-card code{ font-family:var(--mono); font-size:11.5px; color:var(--text); word-break:break-all; }
 
-  .path-preview{
-    font-family:var(--mono); font-size:10.5px; color:var(--muted); padding:0 12px 8px 34px;
-    word-break:break-all; display:none;
+  .two-col{ display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px; }
+  .two-col h4{ margin:0 0 6px; font-size:12px; color:var(--muted); font-weight:600; }
+  pre.code{
+    margin:0; background:var(--panel-2); border:1px solid var(--border); border-radius:8px;
+    padding:12px; font-family:var(--mono); font-size:11.5px; line-height:1.55; color:var(--text);
+    overflow:auto; max-height:280px; white-space:pre;
   }
-  .row.expanded + .path-preview{ display:block; }
 
   .toast{
     position:fixed; bottom:20px; left:50%; transform:translateX(-50%);
@@ -161,88 +166,67 @@
   }
   .toast.show{ opacity:1; transform:translateX(-50%) translateY(-6px); }
 
-  ::-webkit-scrollbar{ width:10px; }
+  ::-webkit-scrollbar{ width:10px; height:10px; }
   ::-webkit-scrollbar-thumb{ background:var(--border); border-radius:5px; }
-</style>
 
+  @media (max-width: 800px){
+    .app{ flex-direction:column; }
+    .sidebar{ width:100%; border-right:none; border-bottom:1px solid var(--border); }
+    .two-col{ grid-template-columns:1fr; }
+  }
+</style>
+</head>
+<body>
 <div class="app">
   <div class="sidebar">
     <div class="brand"><b>PBIP</b> Toolkit</div>
 
     <div class="mode-tabs">
-      <button class="mode-tab active" data-mode-btn="extract">Extract</button>
+      <button class="mode-tab active" data-mode-btn="convert">Make thin report</button>
       <button class="mode-tab" data-mode-btn="transplant">Transplant</button>
     </div>
 
-    <!-- ===== EXTRACT MODE SIDEBAR ===== -->
-    <div class="mode-panel" data-panel="extract">
-      <label class="drop" id="dropExtract">
-        <input type="file" id="inputExtract" webkitdirectory directory multiple />
-        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#8A93A6" stroke-width="1.6"><path d="M3 7a2 2 0 012-2h4l2 2h8a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"/></svg>
-        <div class="drop-label">Select project folder</div>
-        <div class="drop-sub">The folder containing your .pbip file</div>
-      </label>
+    <label class="drop" id="dropDonor">
+      <input type="file" id="inputDonor" webkitdirectory directory multiple />
+      <div class="drop-label" id="donorLabel">Old dashboard</div>
+      <div class="drop-sub" id="donorSub">The full dashboard as a PBIP project folder, including its .SemanticModel folder</div>
+    </label>
+    <div class="mini-summary" id="summaryDonor" style="display:none;"></div>
 
-      <div class="summary" id="summaryExtract" style="display:none;">
-        <div class="root-path" id="rootPathExtract"></div>
-        <div class="summary-row"><span>Pages</span><b id="cPagesExtract">0</b></div>
-        <div class="summary-row"><span>Bookmarks</span><b id="cBookmarksExtract">0</b></div>
-        <div class="summary-row"><span>Measures</span><b id="cMeasuresExtract">0</b></div>
-      </div>
+    <label class="drop" id="dropRecipient">
+      <input type="file" id="inputRecipient" webkitdirectory directory multiple />
+      <div class="drop-label" id="recipientLabel">Shell project</div>
+      <div class="drop-sub" id="recipientSub">A report live-connected to the published model, saved as PBIP. Only its definition.pbir is used</div>
+    </label>
+    <div class="mini-summary" id="summaryRecipient" style="display:none;"></div>
 
-      <input class="filter" id="filterExtract" placeholder="Filter by name…" style="display:none;" />
-    </div>
+    <input class="filter" id="filter" placeholder="Filter donor items…" style="display:none;" />
 
-    <!-- ===== TRANSPLANT MODE SIDEBAR ===== -->
-    <div class="mode-panel" data-panel="transplant" style="display:none;">
-      <label class="drop small" id="dropDonor">
-        <input type="file" id="inputDonor" webkitdirectory directory multiple />
-        <div class="drop-label">Donor project</div>
-        <div class="drop-sub">Copy pages/bookmarks/measures FROM this folder</div>
-      </label>
-      <div class="mini-summary" id="summaryDonor" style="display:none;"></div>
-
-      <label class="drop small" id="dropRecipient">
-        <input type="file" id="inputRecipient" webkitdirectory directory multiple />
-        <div class="drop-label">Recipient project</div>
-        <div class="drop-sub">Copy pages/bookmarks/measures INTO this folder</div>
-      </label>
-      <div class="mini-summary" id="summaryRecipient" style="display:none;"></div>
-
-      <input class="filter" id="filterTransplant" placeholder="Filter donor items…" style="display:none;" />
+    <div class="opts" id="convOptions">
+      <div class="opts-title">Output</div>
+      <input class="text-in" id="outName" placeholder="Zip name (e.g. DUET-thin)" />
     </div>
 
     <div class="sidebar-footer">
-      Everything runs locally in your browser. Nothing is uploaded anywhere — files are read and zipped client-side. <br>
+      Everything runs locally in your browser. Nothing is uploaded anywhere. Files are read and zipped client-side. <br>
       © <a href="https://www.linkedin.com/in/sonam-wangchuk-557097257/" target="_blank" rel="noopener noreferrer">Sonam Wangchuk</a>, 2026
     </div>
   </div>
 
   <div class="main">
     <div class="topbar">
-      <h1 id="topTitle">Select what to extract</h1>
-      <span class="sel-count" id="selCountExtract"></span>
-      <span class="sel-count" id="selCountTransplant" style="display:none;"></span>
+      <h1 id="topTitle">Swap the model link for the live connection</h1>
+      <span class="sel-count" id="selCount"></span>
       <div class="spacer"></div>
-      <button class="btn ghost" id="copyBtnExtract" disabled>Copy paths</button>
-      <button class="btn primary" id="exportBtnExtract" disabled>Export ZIP</button>
+
+      <button class="btn primary" id="convertBtn" disabled>Make thin report &amp; download</button>
+
       <button class="btn ghost" id="selectMissingBtn" style="display:none;">Select all new</button>
       <button class="btn primary" id="mergeBtn" style="display:none;" disabled>Merge &amp; download</button>
     </div>
 
-    <div class="content" id="contentExtract">
-      <div class="empty">
-        <h2>No project loaded</h2>
-        <p>Select the top-level folder that contains your <code>.pbip</code> file (the one holding the <code>.Report</code> and <code>.SemanticModel</code> subfolders). It'll be scanned for page names, bookmark names, and semantic-model measures — nothing leaves your machine.</p>
-      </div>
-    </div>
-
-    <div class="content" id="contentTransplant" style="display:none;">
-      <div class="empty">
-        <h2>Load a donor and a recipient</h2>
-        <p>Pick the donor project (where the pages/bookmarks/measures come from) and the recipient project (what you'll download at the end) on the left. Once both are loaded, tick the donor pages, bookmarks and measures you want to copy over.</p>
-      </div>
-    </div>
+    <div class="content" id="contentConvert"></div>
+    <div class="content" id="contentTransplant" style="display:none;"></div>
   </div>
 </div>
 
@@ -264,7 +248,7 @@ function showToast(msg){
   t.textContent = msg;
   t.classList.add('show');
   clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => t.classList.remove('show'), 2600);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3600);
 }
 
 function filesFromInput(fileList){
@@ -285,6 +269,10 @@ async function readJSONFrom(fileMap, path){
   try { return JSON.parse(t); } catch(e){ return null; }
 }
 
+function cloneJson(value){
+  return value == null ? value : JSON.parse(JSON.stringify(value));
+}
+
 function generateGuid(){
   if (window.crypto && crypto.randomUUID) return crypto.randomUUID();
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
@@ -293,13 +281,119 @@ function generateGuid(){
   });
 }
 
-/**
- * Parses the measure blocks out of a single table's .tmdl text.
- * A measure block starts on a single-tab-indented "measure ... = " line and
- * continues through any deeper-indented (or blank) lines that follow it —
- * this covers the DAX expression body plus properties like formatString,
- * lineageTag, displayFolder, annotations, etc.
- */
+function downloadBlob(blob, filename){
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
+function uniqueId(baseId, existingIds){
+  if (!existingIds.has(baseId)) return baseId;
+  let i = 1, candidate;
+  do {
+    candidate = `${baseId}-copy${i > 1 ? i : ''}`;
+    i++;
+  } while (existingIds.has(candidate));
+  return candidate;
+}
+
+function uniqueMeasureName(base, existingNames){
+  if (!existingNames.has(base)) return base;
+  let i = 1, candidate;
+  do {
+    candidate = `${base} (copy${i > 1 ? ' ' + i : ''})`;
+    i++;
+  } while (existingNames.has(candidate));
+  return candidate;
+}
+
+function renameMeasureBlockLines(lines, newName){
+  const newLines = lines.slice();
+  newLines[0] = newLines[0].replace(/^(\s*measure\s+)(?:'[^']*'|\S+)(\s*=)/, (m, p1, p2) => `${p1}'${newName}'${p2}`);
+  return newLines;
+}
+
+function regenerateLineageTag(lines){
+  return lines.map(l => /lineageTag:/.test(l) ? l.replace(/(lineageTag:\s*)(\S+)/, (m, p1) => `${p1}${generateGuid()}`) : l);
+}
+
+/* ---------- bookmark helpers (Transplant) ---------- */
+
+function bookmarkReferencedPageIds(bookmarkJson){
+  const ids = new Set();
+  if (!bookmarkJson) return ids;
+  const add = v => { if (typeof v === 'string' && v) ids.add(v); };
+
+  if (bookmarkJson.options){
+    add(bookmarkJson.options.activeSection);
+    if (bookmarkJson.options.sections && typeof bookmarkJson.options.sections === 'object')
+      Object.keys(bookmarkJson.options.sections).forEach(add);
+  }
+  if (bookmarkJson.explorationState){
+    add(bookmarkJson.explorationState.activeSection);
+    if (bookmarkJson.explorationState.sections && typeof bookmarkJson.explorationState.sections === 'object')
+      Object.keys(bookmarkJson.explorationState.sections).forEach(add);
+  }
+  return ids;
+}
+
+function rewriteBookmarkPageReferences(bookmarkJson, pageIdMap){
+  if (!bookmarkJson || !pageIdMap || pageIdMap.size === 0) return bookmarkJson;
+  const out = cloneJson(bookmarkJson);
+  const mapId = id => pageIdMap.get(id) || id;
+
+  const remapSections = obj => {
+    if (obj && obj.sections && typeof obj.sections === 'object' && !Array.isArray(obj.sections)){
+      const next = {};
+      for (const [k, v] of Object.entries(obj.sections)) next[mapId(k)] = v;
+      obj.sections = next;
+    }
+  };
+
+  if (out.options && typeof out.options === 'object'){
+    if (typeof out.options.activeSection === 'string') out.options.activeSection = mapId(out.options.activeSection);
+    remapSections(out.options);
+  }
+  if (out.explorationState && typeof out.explorationState === 'object'){
+    if (typeof out.explorationState.activeSection === 'string')
+      out.explorationState.activeSection = mapId(out.explorationState.activeSection);
+    remapSections(out.explorationState);
+  }
+  return out;
+}
+
+function makeBookmarkIndexItem(id, sampleItem){
+  if (typeof sampleItem === 'string') return id;
+  if (sampleItem && typeof sampleItem === 'object' && !Array.isArray(sampleItem)){
+    const clone = cloneJson(sampleItem);
+    delete clone.children; // never inherit a group's children
+    if ('bookmark' in clone) clone.bookmark = id;
+    else if ('name' in clone) clone.name = id;
+    else if ('id' in clone) clone.id = id;
+    else return { name: id };
+    return clone;
+  }
+  return { name: id };
+}
+
+function pickSampleBookmarkItem(...metas){
+  for (const m of metas){
+    if (m && Array.isArray(m.items) && m.items.length) return m.items[0];
+  }
+  return undefined;
+}
+
+function bookmarkDestinationPath(reportRoot, bookmarkId){
+  return `${reportRoot}/definition/bookmarks/${bookmarkId}.bookmark.json`;
+}
+
+/* ---------- TMDL measure parsing (Transplant) ---------- */
+
 function parseMeasuresFromTmdl(text, tableName, tablePath){
   const lines = text.split(/\r?\n/);
   const blocks = [];
@@ -337,7 +431,7 @@ function parseMeasuresFromTmdl(text, tableName, tablePath){
 }
 
 /**
- * Parses a PBIP report project folder into a normalized model.
+ * Parses a PBIP report project folder (PBIR format) for Transplant mode.
  * Returns null if no definition/pages/pages.json could be found.
  */
 async function parseProject(fileMap){
@@ -358,14 +452,12 @@ async function parseProject(fileMap){
 
   const bookmarksDir = `${reportRoot}/definition/bookmarks`;
   const bookmarksJsonPath = `${bookmarksDir}/bookmarks.json`;
-  const bookmarksMeta = await readJSONFrom(fileMap, bookmarksJsonPath); // null if the project has no bookmarks at all
+  const bookmarksMeta = await readJSONFrom(fileMap, bookmarksJsonPath);
 
   const bookmarkFiles = Object.keys(fileMap).filter(p =>
     p.startsWith(bookmarksDir + '/') &&
-    (
-      p.endsWith('.bookmark.json') ||
-      (p.endsWith('.json') && !p.endsWith('/bookmarks.json') && !p.endsWith('.bookmark.json'))
-    )
+    (p.endsWith('.bookmark.json') ||
+     (p.endsWith('.json') && !p.endsWith('/bookmarks.json') && !p.endsWith('.bookmark.json')))
   );
   const bookmarks = [];
   for (const bPath of bookmarkFiles){
@@ -380,12 +472,9 @@ async function parseProject(fileMap){
   }
   bookmarks.sort((a, b) => a.label.localeCompare(b.label));
 
-  // ---- semantic model measures (definition/tables/*.tmdl) ----
   const tmdlPaths = Object.keys(fileMap).filter(p => /\/definition\/tables\/[^\/]+\.tmdl$/.test(p));
-  let semanticModelRoot = null;
   const tables = [];
   for (const tPath of tmdlPaths){
-    if (!semanticModelRoot) semanticModelRoot = tPath.replace(/\/definition\/tables\/[^\/]+\.tmdl$/, '');
     const text = await readTextFrom(fileMap, tPath);
     if (text === null) continue;
     const nameMatch = text.match(/^table\s+(?:'([^']+)'|(\S+))/m);
@@ -399,44 +488,89 @@ async function parseProject(fileMap){
   return {
     reportRoot, pagesJsonPath, pagesMeta, pages,
     bookmarksDir, bookmarksJsonPath, bookmarksMeta, bookmarks,
-    semanticModelRoot, tables, measures
+    tables, measures
   };
 }
 
-function uniqueId(baseId, existingIds){
-  if (!existingIds.has(baseId)) return baseId;
-  let i = 1, candidate;
-  do {
-    candidate = `${baseId}-copy${i > 1 ? i : ''}`;
-    i++;
-  } while (existingIds.has(candidate));
-  return candidate;
+/* ===========================================================
+   Folder analysis for "Make thin report"
+   (works on raw file paths, so it does not need the PBIR page layout)
+   =========================================================== */
+
+/** How does this definition.pbir point at its model? */
+function classifyPbir(text){
+  if (text === null) return { connection: null, version: null };
+  try {
+    const j = JSON.parse(text);
+    const ref = j && j.datasetReference;
+    // Desktop writes "byConnection": null next to a real byPath, so test for real content
+    const connection = (ref && ref.byConnection) ? 'byConnection'
+                     : (ref && ref.byPath) ? 'byPath'
+                     : 'unknown';
+    return { connection, version: j && j.version != null ? String(j.version) : null };
+  } catch(e){
+    return { connection: 'unknown', version: null };
+  }
 }
 
-function uniqueMeasureName(base, existingNames){
-  if (!existingNames.has(base)) return base;
-  let i = 1, candidate;
-  do {
-    candidate = `${base} (copy${i > 1 ? ' ' + i : ''})`;
-    i++;
-  } while (existingNames.has(candidate));
-  return candidate;
-}
+async function analyseFolder(files){
+  const paths = Object.keys(files);
+  if (!paths.length) return null;
 
-function renameMeasureBlockLines(lines, newName){
-  const newLines = lines.slice();
-  newLines[0] = newLines[0].replace(/^(\s*measure\s+)(?:'[^']*'|\S+)(\s*=)/, (m, p1, p2) => `${p1}'${newName}'${p2}`);
-  return newLines;
-}
+  const pbirPaths = paths.filter(p => /\.Report\/definition\.pbir$/.test(p));
+  const pbirPath = pbirPaths[0] || null;
+  const pbirText = pbirPath ? await readTextFrom(files, pbirPath) : null;
+  const { connection, version } = classifyPbir(pbirText);
 
-function regenerateLineageTag(lines){
-  return lines.map(l => /lineageTag:/.test(l) ? l.replace(/(lineageTag:\s*)(\S+)/, (m, p1) => `${p1}${generateGuid()}`) : l);
+  // every top-level "<something>.SemanticModel" folder in the selection
+  const folderCounts = new Map();
+  for (const p of paths){
+    const parts = p.split('/');
+    for (let i = 0; i < parts.length - 1; i++){
+      if (/\.SemanticModel$/i.test(parts[i])){
+        const prefix = parts.slice(0, i + 1).join('/');
+        folderCounts.set(prefix, (folderCounts.get(prefix) || 0) + 1);
+        break;
+      }
+    }
+  }
+  const modelFolders = [...folderCounts.entries()].map(([prefix, count]) => ({ prefix, count }));
+
+  return {
+    root: paths[0].split('/')[0],
+    fileCount: paths.length,
+    pbirPath, pbirText, pbirCount: pbirPaths.length,
+    connection, version,
+    modelFolders
+  };
 }
 
 /* ===========================================================
-   Mode switching
+   State + loading
    =========================================================== */
-let mode = 'extract';
+let mode = 'convert';
+const donor = { files: {}, project: null, info: null };
+const recipient = { files: {}, project: null, info: null };
+const tSel = new Set();   // Transplant selections
+let convResult = null;
+
+el('inputDonor').addEventListener('change', async (e) => {
+  donor.files = filesFromInput(e.target.files);
+  donor.project = await parseProject(donor.files);
+  donor.info = await analyseFolder(donor.files);
+  tSel.clear(); convResult = null;
+  renderAll();
+});
+
+el('inputRecipient').addEventListener('change', async (e) => {
+  recipient.files = filesFromInput(e.target.files);
+  recipient.project = await parseProject(recipient.files);
+  recipient.info = await analyseFolder(recipient.files);
+  convResult = null;
+  renderAll();
+});
+
+el('filter').addEventListener('input', () => renderActive());
 
 document.querySelectorAll('[data-mode-btn]').forEach(btn => {
   btn.addEventListener('click', () => setMode(btn.getAttribute('data-mode-btn')));
@@ -444,625 +578,408 @@ document.querySelectorAll('[data-mode-btn]').forEach(btn => {
 
 function setMode(next){
   mode = next;
+  const c = mode === 'convert';
   document.querySelectorAll('[data-mode-btn]').forEach(b =>
     b.classList.toggle('active', b.getAttribute('data-mode-btn') === mode));
-  document.querySelectorAll('[data-panel]').forEach(p =>
-    p.style.display = p.getAttribute('data-panel') === mode ? 'flex' : 'none');
 
-  el('contentExtract').style.display = mode === 'extract' ? 'block' : 'none';
-  el('contentTransplant').style.display = mode === 'transplant' ? 'block' : 'none';
+  el('contentConvert').style.display = c ? 'block' : 'none';
+  el('contentTransplant').style.display = c ? 'none' : 'block';
+  el('convOptions').style.display = c ? 'flex' : 'none';
+  el('convertBtn').style.display = c ? 'inline-block' : 'none';
+  for (const id of ['selectMissingBtn', 'mergeBtn']) el(id).style.display = c ? 'none' : 'inline-block';
 
-  el('selCountExtract').style.display = mode === 'extract' ? 'inline' : 'none';
-  el('selCountTransplant').style.display = mode === 'transplant' ? 'inline' : 'none';
-  el('copyBtnExtract').style.display = mode === 'extract' ? 'inline-block' : 'none';
-  el('exportBtnExtract').style.display = mode === 'extract' ? 'inline-block' : 'none';
-  el('selectMissingBtn').style.display = mode === 'transplant' ? 'inline-block' : 'none';
-  el('mergeBtn').style.display = mode === 'transplant' ? 'inline-block' : 'none';
+  el('topTitle').textContent = c ? 'Swap the model link for the live connection' : 'Select what to copy from the donor';
+  el('donorLabel').textContent = c ? 'Old dashboard' : 'Donor project';
+  el('donorSub').textContent = c
+    ? 'The full dashboard as a PBIP project folder, including its .SemanticModel folder'
+    : 'Copy pages, bookmarks and measures FROM this folder';
+  el('recipientLabel').textContent = c ? 'Shell project' : 'Recipient project';
+  el('recipientSub').textContent = c
+    ? 'A report live-connected to the published model, saved as PBIP. Only its definition.pbir is used'
+    : 'Copy pages, bookmarks and measures INTO this folder';
+  renderAll();
+}
 
-  el('topTitle').textContent = mode === 'extract'
-    ? 'Select what to extract'
-    : 'Select what to copy from the donor';
+function renderAll(){
+  renderSidebar();
+  renderActive();
+}
+
+function renderActive(){
+  if (mode === 'convert') renderConvert(); else renderTransplant();
+  updateButtons();
+}
+
+function connLabel(c){
+  return c === 'byConnection' ? '<b class="good">live ✓</b>'
+       : c === 'byPath' ? '<b>local model</b>'
+       : '<b class="bad">unrecognised</b>';
+}
+
+function renderSidebar(){
+  const dBox = el('summaryDonor'), rBox = el('summaryRecipient');
+  const d = donor.info, s = recipient.info;
+
+  if (mode === 'convert'){
+    el('dropDonor').classList.toggle('filled', !!(d && d.pbirPath));
+    el('dropRecipient').classList.toggle('filled', !!(s && s.pbirPath && s.connection === 'byConnection'));
+
+    dBox.style.display = d ? 'block' : 'none';
+    if (d) dBox.innerHTML = `<div class="name">${escapeHtml(d.root)}</div>
+      <div class="mini-row"><span>definition.pbir</span>${d.pbirPath ? '<b class="good">found</b>' : '<b class="bad">missing</b>'}</div>
+      <div class="mini-row"><span>Model link</span>${d.pbirPath ? connLabel(d.connection) : '<b>-</b>'}</div>
+      <div class="mini-row"><span>.SemanticModel</span><b>${d.modelFolders.length ? d.modelFolders.length + ' folder' + (d.modelFolders.length === 1 ? '' : 's') : 'none'}</b></div>`;
+
+    rBox.style.display = s ? 'block' : 'none';
+    if (s) rBox.innerHTML = `<div class="name">${escapeHtml(s.root)}</div>
+      <div class="mini-row"><span>definition.pbir</span>${s.pbirPath ? '<b class="good">found</b>' : '<b class="bad">missing</b>'}</div>
+      <div class="mini-row"><span>Model link</span>${s.pbirPath ? (s.connection === 'byConnection' ? '<b class="good">live ✓</b>' : '<b class="bad">not live ✗</b>') : '<b>-</b>'}</div>`;
+
+    el('filter').style.display = 'none';
+  } else {
+    const box = (b, drop, side) => {
+      drop.classList.toggle('filled', !!side.project);
+      const hasFiles = Object.keys(side.files).length > 0;
+      b.style.display = hasFiles ? 'block' : 'none';
+      if (!hasFiles) return;
+      if (!side.project){
+        b.innerHTML = `<div class="name bad">No definition/pages/pages.json found</div><div>Transplant needs the PBIR page layout.</div>`;
+        return;
+      }
+      const p = side.project;
+      b.innerHTML = `<div class="name">${escapeHtml(p.reportRoot)}</div>
+        <div class="mini-row"><span>Pages</span><b>${p.pages.length}</b></div>
+        <div class="mini-row"><span>Bookmarks</span><b>${p.bookmarks.length}</b></div>
+        <div class="mini-row"><span>Measures</span><b>${p.measures.length}</b></div>`;
+    };
+    box(dBox, el('dropDonor'), donor);
+    box(rBox, el('dropRecipient'), recipient);
+    el('filter').style.display = donor.project ? 'block' : 'none';
+  }
+}
+
+function updateButtons(){
+  const bothLoaded = !!(donor.project && recipient.project);
+  if (mode === 'convert'){
+    el('selCount').textContent = '';
+    el('convertBtn').disabled = !convertCheck().ok;
+  } else {
+    const n = tSel.size;
+    el('selCount').textContent = n ? `${n} selected` : '';
+    el('mergeBtn').disabled = !(n > 0 && bothLoaded);
+    el('selectMissingBtn').disabled = !bothLoaded;
+  }
+}
+
+function wireToggles(container, toggleFn){
+  container.onclick = (e) => {
+    const row = e.target.closest('[data-toggle]');
+    if (!row || !container.contains(row)) return;
+    toggleFn(row.getAttribute('data-toggle'));
+  };
+}
+
+function withScroll(container, fn){
+  const top = container.scrollTop;
+  const winTop = window.scrollY;
+  fn();
+  container.scrollTop = top;
+  window.scrollTo(0, winTop);
 }
 
 /* ===========================================================
-   EXTRACT MODE  (same behaviour as the original single-folder tool,
-   now also listing semantic-model measures)
+   MAKE THIN REPORT
+   Old dashboard in, same dashboard out, with:
+     1. every *.SemanticModel folder deleted
+     2. .Report/definition.pbir replaced by the shell's definition.pbir
+   Pages, bookmarks, themes and resources are untouched.
    =========================================================== */
-const ex = { files: {}, project: null, selected: new Set() };
 
-el('inputExtract').addEventListener('change', async (e) => {
-  ex.files = filesFromInput(e.target.files);
-  ex.project = await parseProject(ex.files);
-  ex.selected.clear();
-  renderExtract();
-});
+function convertCheck(){
+  const d = donor.info, s = recipient.info;
+  const problems = [], warnings = [];
 
-function renderExtract(filterText = ''){
-  if (!ex.project){
-    el('contentExtract').innerHTML = `<div class="empty"><h2>No report definition found</h2><p>Couldn't find a <code>definition/pages/pages.json</code> file. Make sure you selected the folder that contains the <code>.Report</code> subfolder (PBIP / TMDL format).</p></div>`;
-    el('summaryExtract').style.display = 'none';
-    el('filterExtract').style.display = 'none';
-    updateExtractButtons();
+  if (!d || !s) return { ok: false, problems, warnings };
+
+  if (!d.pbirPath){
+    problems.push('No <code>.Report/definition.pbir</code> in the old dashboard. Select the project folder that contains the <code>.Report</code> folder.');
+  }
+  if (!s.pbirPath){
+    problems.push('No <code>.Report/definition.pbir</code> in the shell. Select the shell project folder.');
+  } else if (s.connection !== 'byConnection'){
+    problems.push(`The shell's <code>definition.pbir</code> is not a live connection (it ${s.connection === 'byPath' ? 'points to a local model' : 'has an unrecognised format'}). Use a shell created with <b>Get data → Power BI semantic models</b>. Swapping this file in would leave the report with no model.`);
+  }
+
+  if (d.pbirCount > 1) warnings.push(`The old dashboard has ${d.pbirCount} reports. Only <code>${escapeHtml(d.pbirPath)}</code> will be changed.`);
+  if (s.pbirCount > 1) warnings.push(`The shell has ${s.pbirCount} reports. Only <code>${escapeHtml(s.pbirPath)}</code> is used.`);
+  if (d.pbirPath && d.connection === 'byConnection'){
+    warnings.push('The old dashboard is already live-connected. Only <code>definition.pbir</code> will be swapped.');
+  } else if (d.pbirPath && d.modelFolders.length === 0){
+    warnings.push('No <code>.SemanticModel</code> folder found inside the old dashboard folder. If the model sits outside the folder you selected, it will not be touched. Only <code>definition.pbir</code> will be swapped.');
+  }
+  if (s.version && d.pbirPath && donor.project && parseFloat(s.version) < 4){
+    warnings.push(`The shell's definition.pbir is version ${escapeHtml(s.version)}, but the old dashboard uses the PBIR page layout, which needs version 4.0 or higher. Desktop may refuse to open the result.`);
+  }
+
+  return { ok: problems.length === 0, problems, warnings };
+}
+
+function renderConvert(){
+  const box = el('contentConvert');
+  const d = donor.info, s = recipient.info;
+
+  if (!d || !s){
+    const missing = !d && !s ? 'the old dashboard and the shell' : !d ? 'the old dashboard' : 'the shell';
+    box.innerHTML = `<div class="empty"><h2>Load ${missing}</h2>
+      <p>The tool deletes the <code>.SemanticModel</code> folder from the old dashboard and swaps in the shell's <code>definition.pbir</code>. Every page, bookmark, theme and image stays exactly as it was.</p></div>`;
     return;
   }
 
-  el('summaryExtract').style.display = 'flex';
-  el('filterExtract').style.display = 'block';
-  el('rootPathExtract').textContent = ex.project.reportRoot;
-  el('cPagesExtract').textContent = ex.project.pages.length;
-  el('cBookmarksExtract').textContent = ex.project.bookmarks.length;
-  el('cMeasuresExtract').textContent = ex.project.measures.length;
-
-  const f = filterText.trim().toLowerCase();
-  const matches = label => !f || label.toLowerCase().includes(f);
-
+  const chk = convertCheck();
   let html = '';
 
-  const visiblePages = ex.project.pages.filter(p => matches(p.label));
-  html += `<div class="section"><div class="section-head"><h3>Pages</h3></div>`;
-  if (visiblePages.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No matches.</div>`;
-  } else {
-    html += `<div class="page-group">`;
-    for (const p of visiblePages){
-      const checked = ex.selected.has(p.path) ? 'checked' : '';
-      html += `<div class="row page-row" data-toggle="${p.path}">
-        <input type="checkbox" ${checked} data-toggle="${p.path}" />
-        <span class="badge page">page</span>
-        <span class="label">${escapeHtml(p.label)}</span>
-      </div>
-      <div class="path-preview">${escapeHtml(p.path)}</div>`;
-    }
-    html += `</div>`;
+  if (convResult){
+    html += `<div class="info-card good">
+      <h4>Downloaded ${escapeHtml(convResult.fileName)}</h4>
+      Deleted ${convResult.removed} file${convResult.removed === 1 ? '' : 's'} in ${convResult.folders} model folder${convResult.folders === 1 ? '' : 's'}.
+      Replaced <code>${escapeHtml(convResult.pbir)}</code>.
+      Kept ${convResult.kept} other file${convResult.kept === 1 ? '' : 's'} unchanged.
+    </div>`;
   }
-  html += `</div>`;
 
-  const visibleBookmarks = ex.project.bookmarks.filter(b => matches(b.label));
-  html += `<div class="section"><div class="section-head"><h3>Bookmarks</h3></div>`;
-  if (ex.project.bookmarks.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No bookmarks found in this project.</div>`;
-  } else if (visibleBookmarks.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No matches.</div>`;
-  } else {
-    html += `<div class="page-group">`;
-    for (const b of visibleBookmarks){
-      const checked = ex.selected.has(b.path) ? 'checked' : '';
-      html += `<div class="row" data-toggle="${b.path}">
-        <input type="checkbox" ${checked} data-toggle="${b.path}" />
-        <span class="badge bookmark">bookmark</span>
-        <span class="label">${escapeHtml(b.label)}</span>
-      </div>
-      <div class="path-preview">${escapeHtml(b.path)}</div>`;
-    }
-    html += `</div>`;
+  if (chk.problems.length){
+    html += `<div class="info-card bad"><h4>Can't continue yet</h4><ul>${chk.problems.map(p => `<li>${p}</li>`).join('')}</ul></div>`;
   }
-  html += `</div>`;
+  if (chk.warnings.length){
+    html += `<div class="info-card warn"><h4>Heads up</h4><ul>${chk.warnings.map(w => `<li>${w}</li>`).join('')}</ul></div>`;
+  }
 
-  const visibleTables = ex.project.tables
-    .map(t => ({ ...t, measures: t.measures.filter(m => matches(m.name) || matches(t.name)) }))
-    .filter(t => t.measures.length > 0);
+  // what will happen
+  const removedTotal = d.modelFolders.reduce((n, f) => n + f.count, 0);
+  const keptTotal = d.fileCount - removedTotal - (d.pbirPath ? 1 : 0);
+  html += `<div class="info-card">
+    <h4>What will happen</h4>
+    <ul>
+      <li><b>Delete</b> ${d.modelFolders.length
+        ? d.modelFolders.map(f => `<code>${escapeHtml(f.prefix)}</code> (${f.count} file${f.count === 1 ? '' : 's'})`).join(', ')
+        : 'nothing (no model folder found)'}</li>
+      <li><b>Replace</b> ${d.pbirPath ? `<code>${escapeHtml(d.pbirPath)}</code>` : 'definition.pbir'} with the shell's ${s.pbirPath ? `<code>${escapeHtml(s.pbirPath)}</code>` : 'file'}</li>
+      <li><b>Keep</b> the other ${keptTotal} file${keptTotal === 1 ? '' : 's'}: all pages, bookmarks, themes and resources</li>
+    </ul>
+  </div>`;
 
-  html += `<div class="section"><div class="section-head"><h3>Measures</h3></div>`;
-  if (ex.project.tables.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No semantic model tables found (looked for definition/tables/*.tmdl next to the report).</div>`;
-  } else if (visibleTables.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No matches.</div>`;
-  } else {
-    for (const t of visibleTables){
-      html += `<div class="page-group">
-        <div class="row page-row" style="cursor:default;">
-          <span class="label" style="font-weight:700;">${escapeHtml(t.name)}</span>
-          <span class="meta">${t.measures.length} measure${t.measures.length === 1 ? '' : 's'}</span>
-        </div>`;
-      for (const m of t.measures){
-        const checked = ex.selected.has(m.id) ? 'checked' : '';
-        html += `<div class="row" data-toggle="${escapeHtml(m.id)}">
-          <input type="checkbox" ${checked} data-toggle="${escapeHtml(m.id)}" />
-          <span class="badge measure">measure</span>
-          <span class="label">${escapeHtml(m.name)}</span>
-        </div>`;
+  html += `<div class="two-col">
+    <div><h4>Old definition.pbir (will be replaced)</h4><pre class="code">${d.pbirText !== null ? escapeHtml(d.pbirText) : '(not found)'}</pre></div>
+    <div><h4>New definition.pbir (from the shell)</h4><pre class="code">${s.pbirText !== null ? escapeHtml(s.pbirText) : '(not found)'}</pre></div>
+  </div>`;
+
+  html += `<div class="info-card">
+    <b>Before you publish:</b> the result keeps the old dashboard's name. Publishing it to the same workspace as the full report would replace that report. Rename it first (in Desktop, <b>Save as</b> under a new name) or publish to a different workspace.
+  </div>`;
+
+  box.innerHTML = html;
+}
+
+async function runConvert(){
+  const chk = convertCheck();
+  if (!chk.ok) return;
+  const d = donor.info, s = recipient.info;
+  const btn = el('convertBtn');
+  btn.disabled = true;
+  btn.textContent = 'Working…';
+
+  try {
+    const prefixes = d.modelFolders.map(f => f.prefix + '/');
+    const zip = new JSZip();
+    let removed = 0, kept = 0;
+
+    for (const [path, file] of Object.entries(donor.files)){
+      if (prefixes.some(pf => path.startsWith(pf))){ removed++; continue; }
+      if (path === d.pbirPath){
+        // exact bytes of the shell's file
+        zip.file(path, await recipient.files[s.pbirPath].arrayBuffer());
+        continue;
       }
-      html += `</div>`;
+      zip.file(path, await file.arrayBuffer());
+      kept++;
     }
+
+    const rawName = el('outName').value.trim().replace(/[\\/:*?"<>|]/g, '_');
+    const fileName = (rawName || `${d.root}-thin`) + '.zip';
+    const blob = await zip.generateAsync({ type: 'blob' });
+    downloadBlob(blob, fileName);
+
+    convResult = { fileName, removed, folders: d.modelFolders.length, kept, pbir: d.pbirPath };
+    renderActive();
+    el('contentConvert').scrollTop = 0;
+    showToast(`Downloaded ${fileName}`);
+  } catch (err){
+    console.error(err);
+    showToast('Something went wrong: ' + err.message);
+  } finally {
+    btn.textContent = 'Make thin report & download';
+    updateButtons();
   }
-  html += `</div>`;
+}
+el('convertBtn').addEventListener('click', runConvert);
 
-  el('contentExtract').innerHTML = html;
+/* ===========================================================
+   TRANSPLANT MODE (donor -> recipient page/bookmark/measure copying)
+   =========================================================== */
 
-  el('contentExtract').querySelectorAll('[data-toggle]').forEach(node => {
-    node.addEventListener('click', (e) => {
-      if (e.target.tagName === 'INPUT') return;
-      toggleExtractSelect(node.getAttribute('data-toggle'));
-    });
-  });
-  el('contentExtract').querySelectorAll('input[type=checkbox][data-toggle]').forEach(cb => {
-    cb.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleExtractSelect(cb.getAttribute('data-toggle'));
-    });
+function renderTransplant(){
+  const box = el('contentTransplant');
+  wireToggles(box, id => {
+    if (tSel.has(id)) tSel.delete(id); else tSel.add(id);
+    renderActive();
   });
 
-  updateExtractButtons();
-}
+  if (!donor.project){
+    box.innerHTML = `<div class="empty"><h2>Load a donor and a recipient</h2><p>Pick the donor project (where the pages, bookmarks and measures come from) and the recipient project (what you'll download at the end) on the left. Then tick what you want to copy over.</p></div>`;
+    return;
+  }
 
-function toggleExtractSelect(id){
-  if (ex.selected.has(id)) ex.selected.delete(id); else ex.selected.add(id);
-  renderExtract(el('filterExtract').value);
-}
+  withScroll(box, () => {
+    const f = el('filter').value.trim().toLowerCase();
+    const matches = label => !f || label.toLowerCase().includes(f);
+    const recipientPageIds = new Set(recipient.project ? recipient.project.pages.map(p => p.id) : []);
+    const recipientBookmarkIds = new Set(recipient.project ? recipient.project.bookmarks.map(b => b.id) : []);
+    const recipientTableNames = new Set(recipient.project ? recipient.project.tables.map(t => t.name) : []);
+    const recipientMeasureKeys = new Set(recipient.project ? recipient.project.measures.map(m => `${m.table}::${m.name}`) : []);
 
-function updateExtractButtons(){
-  const n = ex.selected.size;
-  el('selCountExtract').textContent = n ? `${n} selected` : '';
-  el('exportBtnExtract').disabled = n === 0;
-  el('copyBtnExtract').disabled = n === 0;
-}
+    let html = `<div class="info-card">Copies whole page folders (layout, visuals, thumbnails), bookmark files, and measure definitions. Page and bookmark ids are renamed on collision without overwriting the recipient. When a copied bookmark references a page that is also copied, its page references are remapped. If you copy a bookmark without its page, the bookmark is imported but the tool warns you that it still points to the donor.</div>`;
 
-function collectExtractPaths(){
-  const paths = new Set();
-  for (const id of ex.selected){
-    const isFile = ex.files[id] !== undefined;
-    const isKnownFolderOrFile = ex.project.pages.some(p => p.path === id) || ex.project.bookmarks.some(b => b.path === id);
-    if (!isKnownFolderOrFile) continue; // skip measure ids here, handled separately
-    if (isFile){
-      paths.add(id);
+    const visiblePages = donor.project.pages.filter(p => matches(p.label));
+    html += `<div class="section"><div class="section-head"><h3>Donor pages</h3></div>`;
+    if (visiblePages.length === 0){
+      html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No matches.</div>`;
     } else {
-      const prefix = id + '/';
-      Object.keys(ex.files).forEach(p => { if (p === id || p.startsWith(prefix)) paths.add(p); });
-    }
-  }
-  return Array.from(paths);
-}
-
-function collectExtractMeasureSelections(){
-  return ex.project.measures.filter(m => ex.selected.has(m.id));
-}
-
-el('copyBtnExtract').addEventListener('click', async () => {
-  const paths = collectExtractPaths();
-  const measures = collectExtractMeasureSelections();
-  const lines = [...paths, ...measures.map(m => `${m.tablePath} (measure: ${m.name})`)];
-  await navigator.clipboard.writeText(lines.join('\n'));
-  showToast(`Copied ${lines.length} item${lines.length === 1 ? '' : 's'}`);
-});
-
-el('exportBtnExtract').addEventListener('click', async () => {
-  const paths = collectExtractPaths();
-  const measures = collectExtractMeasureSelections();
-  if (paths.length === 0 && measures.length === 0) return;
-  el('exportBtnExtract').disabled = true;
-  el('exportBtnExtract').textContent = 'Zipping…';
-  const zip = new JSZip();
-  for (const p of paths){
-    zip.file(p, await ex.files[p].arrayBuffer());
-  }
-  for (const m of measures){
-    const safeName = m.name.replace(/[\\/:*?"<>|]/g, '_');
-    zip.file(`measures/${m.table}/${safeName}.tmdl`, m.text + '\n');
-  }
-  const blob = await zip.generateAsync({ type: 'blob' });
-  downloadBlob(blob, 'pbip-selection.zip');
-  el('exportBtnExtract').disabled = false;
-  el('exportBtnExtract').textContent = 'Export ZIP';
-  showToast(`Exported ${paths.length + measures.length} item${(paths.length + measures.length) === 1 ? '' : 's'}`);
-});
-
-el('filterExtract').addEventListener('input', (e) => renderExtract(e.target.value));
-
-function downloadBlob(blob, filename){
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  URL.revokeObjectURL(url);
-}
-
-/* ===========================================================
-   TRANSPLANT MODE  (donor -> recipient page/bookmark/measure copying)
-   =========================================================== */
-const donor = { files: {}, project: null };
-const recipient = { files: {}, project: null };
-const transplantSelected = new Set(); // keys are donor item .path / .id values
-
-el('inputDonor').addEventListener('change', async (e) => {
-  donor.files = filesFromInput(e.target.files);
-  donor.project = await parseProject(donor.files);
-  transplantSelected.clear();
-  renderDonorSummary();
-  renderTransplant();
-  updateTransplantButtons();
-});
-
-el('inputRecipient').addEventListener('change', async (e) => {
-  recipient.files = filesFromInput(e.target.files);
-  recipient.project = await parseProject(recipient.files);
-  renderRecipientSummary();
-  renderTransplant();
-  updateTransplantButtons();
-});
-
-function renderDonorSummary(){
-  const box = el('summaryDonor');
-  el('dropDonor').classList.toggle('filled', !!donor.project);
-  if (!donor.project){
-    box.style.display = 'none';
-    return;
-  }
-  box.style.display = 'block';
-  box.innerHTML = `<div class="name">${escapeHtml(donor.project.reportRoot)}</div>
-    <div class="mini-row"><span>Pages</span><b style="color:var(--text)">${donor.project.pages.length}</b></div>
-    <div class="mini-row"><span>Bookmarks</span><b style="color:var(--text)">${donor.project.bookmarks.length}</b></div>
-    <div class="mini-row"><span>Measures</span><b style="color:var(--text)">${donor.project.measures.length}</b></div>`;
-}
-
-function renderRecipientSummary(){
-  const box = el('summaryRecipient');
-  el('dropRecipient').classList.toggle('filled', !!recipient.project);
-  if (!recipient.project){
-    box.style.display = 'none';
-    return;
-  }
-  box.style.display = 'block';
-  box.innerHTML = `<div class="name">${escapeHtml(recipient.project.reportRoot)}</div>
-    <div class="mini-row"><span>Pages</span><b style="color:var(--text)">${recipient.project.pages.length}</b></div>
-    <div class="mini-row"><span>Bookmarks</span><b style="color:var(--text)">${recipient.project.bookmarks.length}</b></div>
-    <div class="mini-row"><span>Measures</span><b style="color:var(--text)">${recipient.project.measures.length}</b></div>`;
-}
-
-function renderTransplant(filterText = ''){
-  el('filterTransplant').style.display = donor.project ? 'block' : 'none';
-
-  if (!donor.project){
-    el('contentTransplant').innerHTML = `<div class="empty"><h2>Load a donor and a recipient</h2><p>Pick the donor project (where the pages/bookmarks/measures come from) and the recipient project (what you'll download at the end) on the left. Once both are loaded, tick the donor pages, bookmarks and measures you want to copy over.</p></div>`;
-    updateTransplantButtons();
-    return;
-  }
-
-  const f = filterText.trim().toLowerCase();
-  const matches = label => !f || label.toLowerCase().includes(f);
-  const recipientPageIds = new Set(recipient.project ? recipient.project.pages.map(p => p.id) : []);
-  const recipientBookmarkIds = new Set(recipient.project ? recipient.project.bookmarks.map(b => b.id) : []);
-  const recipientTableNames = new Set(recipient.project ? recipient.project.tables.map(t => t.name) : []);
-  const recipientMeasureKeys = new Set(recipient.project ? recipient.project.measures.map(m => `${m.table}::${m.name}`) : []);
-
-  let html = '';
-
-  html += `<div class="info-card">Copies whole page folders (layout, visuals, thumbnails), PBIR bookmark files, and measure definitions. Page/bookmark ids are renamed on collision without overwriting the recipient. When a copied bookmark references a page that is also copied, its page references are remapped to the new page id; visual ids are preserved because the page's visual folders are copied intact. If you copy a bookmark without its referenced page, the bookmark is imported but the tool warns you that those page references still point to the donor.</div>`;
-
-  const visiblePages = donor.project.pages.filter(p => matches(p.label));
-  html += `<div class="section"><div class="section-head"><h3>Donor pages</h3></div>`;
-  if (visiblePages.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No matches.</div>`;
-  } else {
-    html += `<div class="page-group">`;
-    for (const p of visiblePages){
-      const checked = transplantSelected.has(p.path) ? 'checked' : '';
-      const willRename = recipient.project && recipientPageIds.has(p.id);
-      html += `<div class="row page-row" data-toggle="${p.path}">
-        <input type="checkbox" ${checked} data-toggle="${p.path}" />
-        <span class="badge page">page</span>
-        <span class="label">${escapeHtml(p.label)}</span>
-        ${willRename ? `<span class="tag">id exists — will rename</span>` : ''}
-      </div>`;
-    }
-    html += `</div>`;
-  }
-  html += `</div>`;
-
-  const visibleBookmarks = donor.project.bookmarks.filter(b => matches(b.label));
-  html += `<div class="section"><div class="section-head"><h3>Donor bookmarks</h3></div>`;
-  if (donor.project.bookmarks.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No bookmarks found in the donor project.</div>`;
-  } else if (visibleBookmarks.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No matches.</div>`;
-  } else {
-    html += `<div class="page-group">`;
-    for (const b of visibleBookmarks){
-      const checked = transplantSelected.has(b.path) ? 'checked' : '';
-      const willRename = recipient.project && recipientBookmarkIds.has(b.id);
-      html += `<div class="row" data-toggle="${b.path}">
-        <input type="checkbox" ${checked} data-toggle="${b.path}" />
-        <span class="badge bookmark">bookmark</span>
-        <span class="label">${escapeHtml(b.label)}</span>
-        ${willRename ? `<span class="tag">id exists — will rename</span>` : ''}
-      </div>`;
-    }
-    html += `</div>`;
-  }
-  html += `</div>`;
-
-  const visibleMeasureTables = donor.project.tables
-    .map(t => ({ ...t, measures: t.measures.filter(m => matches(m.name) || matches(t.name)) }))
-    .filter(t => t.measures.length > 0);
-
-  html += `<div class="section"><div class="section-head"><h3>Donor measures</h3></div>`;
-  if (donor.project.tables.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No semantic model tables found in the donor project.</div>`;
-  } else if (visibleMeasureTables.length === 0){
-    html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No matches.</div>`;
-  } else {
-    for (const t of visibleMeasureTables){
-      const tableExists = recipientTableNames.has(t.name);
-      html += `<div class="page-group">
-        <div class="row page-row" style="cursor:default;">
-          <span class="label" style="font-weight:700;">${escapeHtml(t.name)}</span>
-          ${recipient.project && !tableExists
-            ? `<span class="tag warn">no matching table</span>`
-            : `<span class="meta">${t.measures.length} measure${t.measures.length === 1 ? '' : 's'}</span>`}
-        </div>`;
-      for (const m of t.measures){
-        const checked = transplantSelected.has(m.id) ? 'checked' : '';
-        const willRename = recipient.project && recipientMeasureKeys.has(`${t.name}::${m.name}`);
-        html += `<div class="row" data-toggle="${escapeHtml(m.id)}">
-          <input type="checkbox" ${checked} data-toggle="${escapeHtml(m.id)}" />
-          <span class="badge measure">measure</span>
-          <span class="label">${escapeHtml(m.name)}</span>
-          ${willRename ? `<span class="tag">name exists — will rename</span>` : ''}
+      html += `<div class="page-group">`;
+      for (const p of visiblePages){
+        const checked = tSel.has(p.path) ? 'checked' : '';
+        const willRename = recipient.project && recipientPageIds.has(p.id);
+        html += `<div class="row page-row" data-toggle="${escapeHtml(p.path)}">
+          <input type="checkbox" ${checked} />
+          <span class="badge page">page</span>
+          <span class="label">${escapeHtml(p.label)}</span>
+          ${willRename ? `<span class="tag">id exists, will rename</span>` : ''}
         </div>`;
       }
       html += `</div>`;
     }
-  }
-  html += `</div>`;
+    html += `</div>`;
 
-  el('contentTransplant').innerHTML = html;
+    const visibleBookmarks = donor.project.bookmarks.filter(b => matches(b.label));
+    html += `<div class="section"><div class="section-head"><h3>Donor bookmarks</h3></div>`;
+    if (donor.project.bookmarks.length === 0){
+      html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No bookmarks found in the donor project.</div>`;
+    } else if (visibleBookmarks.length === 0){
+      html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No matches.</div>`;
+    } else {
+      html += `<div class="page-group">`;
+      for (const b of visibleBookmarks){
+        const checked = tSel.has(b.path) ? 'checked' : '';
+        const willRename = recipient.project && recipientBookmarkIds.has(b.id);
+        html += `<div class="row" data-toggle="${escapeHtml(b.path)}">
+          <input type="checkbox" ${checked} />
+          <span class="badge bookmark">bookmark</span>
+          <span class="label">${escapeHtml(b.label)}</span>
+          ${willRename ? `<span class="tag">id exists, will rename</span>` : ''}
+        </div>`;
+      }
+      html += `</div>`;
+    }
+    html += `</div>`;
 
-  el('contentTransplant').querySelectorAll('[data-toggle]').forEach(node => {
-    node.addEventListener('click', (e) => {
-      if (e.target.tagName === 'INPUT') return;
-      toggleTransplantSelect(node.getAttribute('data-toggle'));
-    });
+    const visibleMeasureTables = donor.project.tables
+      .map(t => ({ ...t, measures: t.measures.filter(m => matches(m.name) || matches(t.name)) }))
+      .filter(t => t.measures.length > 0);
+
+    html += `<div class="section"><div class="section-head"><h3>Donor measures</h3></div>`;
+    if (donor.project.tables.length === 0){
+      html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No semantic model tables found in the donor project.</div>`;
+    } else if (visibleMeasureTables.length === 0){
+      html += `<div style="color:var(--muted); font-size:13px; padding:8px 0;">No matches.</div>`;
+    } else {
+      for (const t of visibleMeasureTables){
+        const tableExists = recipientTableNames.has(t.name);
+        html += `<div class="page-group">
+          <div class="row page-row static">
+            <span class="label" style="font-weight:700;">${escapeHtml(t.name)}</span>
+            ${recipient.project && !tableExists
+              ? `<span class="tag warn">no matching table</span>`
+              : `<span class="meta">${t.measures.length} measure${t.measures.length === 1 ? '' : 's'}</span>`}
+          </div>`;
+        for (const m of t.measures){
+          const checked = tSel.has(m.id) ? 'checked' : '';
+          const willRename = recipient.project && recipientMeasureKeys.has(`${t.name}::${m.name}`);
+          html += `<div class="row" data-toggle="${escapeHtml(m.id)}">
+            <input type="checkbox" ${checked} />
+            <span class="badge measure">measure</span>
+            <span class="label">${escapeHtml(m.name)}</span>
+            ${willRename ? `<span class="tag">name exists, will rename</span>` : ''}
+          </div>`;
+        }
+        html += `</div>`;
+      }
+    }
+    html += `</div>`;
+
+    box.innerHTML = html;
   });
-  el('contentTransplant').querySelectorAll('input[type=checkbox][data-toggle]').forEach(cb => {
-    cb.addEventListener('click', (e) => {
-      e.stopPropagation();
-      toggleTransplantSelect(cb.getAttribute('data-toggle'));
-    });
-  });
-
-  updateTransplantButtons();
 }
 
-function toggleTransplantSelect(id){
-  if (transplantSelected.has(id)) transplantSelected.delete(id); else transplantSelected.add(id);
-  renderTransplant(el('filterTransplant').value);
-}
-
-function updateTransplantButtons(){
-  const n = transplantSelected.size;
-  el('selCountTransplant').textContent = n ? `${n} selected` : '';
-  el('mergeBtn').disabled = !(n > 0 && donor.project && recipient.project);
-  // Enable selectMissing only if both projects are loaded
-  el('selectMissingBtn').disabled = !(donor.project && recipient.project);
-}
-
-el('filterTransplant').addEventListener('input', (e) => renderTransplant(e.target.value));
-
-/* -----------------------------------------------------------
-   NEW: Select missing items (donor items not in recipient)
-   ----------------------------------------------------------- */
 el('selectMissingBtn').addEventListener('click', () => {
   if (!donor.project || !recipient.project) return;
 
-  // Build sets of existing recipient IDs
   const recipientPageIds = new Set(recipient.project.pages.map(p => p.id));
   const recipientBookmarkIds = new Set(recipient.project.bookmarks.map(b => b.id));
   const recipientMeasureKeys = new Set(recipient.project.measures.map(m => `${m.table}::${m.name}`));
 
-  // Clear current selection and re‑select only missing items
-  transplantSelected.clear();
+  tSel.clear();
+  for (const p of donor.project.pages) if (!recipientPageIds.has(p.id)) tSel.add(p.path);
+  for (const b of donor.project.bookmarks) if (!recipientBookmarkIds.has(b.id)) tSel.add(b.path);
+  for (const m of donor.project.measures) if (!recipientMeasureKeys.has(`${m.table}::${m.name}`)) tSel.add(m.id);
 
-  // Pages: select if donor id not in recipient
-  for (const p of donor.project.pages) {
-    if (!recipientPageIds.has(p.id)) {
-      transplantSelected.add(p.path);
-    }
-  }
-
-  // Bookmarks: select if donor id not in recipient
-  for (const b of donor.project.bookmarks) {
-    if (!recipientBookmarkIds.has(b.id)) {
-      transplantSelected.add(b.path);
-    }
-  }
-
-  // Measures: select if table+name not in recipient
-  for (const m of donor.project.measures) {
-    const key = `${m.table}::${m.name}`;
-    if (!recipientMeasureKeys.has(key)) {
-      transplantSelected.add(m.id);
-    }
-  }
-
-  // Re‑render with current filter
-  renderTransplant(el('filterTransplant').value);
-  showToast(`Selected ${transplantSelected.size} missing items from donor`);
+  renderActive();
+  showToast(`Selected ${tSel.size} missing items from donor`);
 });
 
-/**
- * Builds the merged recipient project (recipient files + selected donor
- * pages/bookmarks/measures, renamed on collision, registered in
- * pages.json / bookmarks.json / the matching table's .tmdl) and downloads
- * it as a zip.
- */
-
-/* -----------------------------------------------------------
-   Bookmark transplant helpers
-
-   PBIR bookmarks are not just index entries. The bookmark file
-   contains the captured report state, including activeSection
-   and section/page state. When a selected donor page is copied
-   and gets a new id, those page references must follow it.
-
-   Visual ids normally remain unchanged because the entire visual
-   folder is copied with the page, so targetVisualNames can remain
-   as-is. We only rewrite page/section references here.
------------------------------------------------------------ */
-
-function cloneJson(value){
-  return value == null ? value : JSON.parse(JSON.stringify(value));
-}
-
-function rewriteBookmarkPageReferences(bookmarkJson, pageIdMap){
-  if (!bookmarkJson || !pageIdMap || pageIdMap.size === 0) return bookmarkJson;
-
-  const out = cloneJson(bookmarkJson);
-  const mapPageId = id => pageIdMap.get(id) || id;
-
-  // PBIR bookmark schema uses options.activeSection and
-  // explorationState.activeSection depending on report/schema generation.
-  if (out.options && typeof out.options === 'object'){
-    if (typeof out.options.activeSection === 'string'){
-      out.options.activeSection = mapPageId(out.options.activeSection);
-    }
-  }
-
-  if (out.explorationState && typeof out.explorationState === 'object'){
-    if (typeof out.explorationState.activeSection === 'string'){
-      out.explorationState.activeSection = mapPageId(out.explorationState.activeSection);
-    }
-
-    // In PBIR versions where section state is keyed by page id,
-    // the keys themselves must be changed.
-    if (out.explorationState.sections &&
-        typeof out.explorationState.sections === 'object' &&
-        !Array.isArray(out.explorationState.sections)){
-      const rewrittenSections = {};
-      for (const [sectionId, sectionState] of Object.entries(out.explorationState.sections)){
-        rewrittenSections[mapPageId(sectionId)] = sectionState;
-      }
-      out.explorationState.sections = rewrittenSections;
-    }
-  }
-
-  // Some generated projects put sections directly under options.
-  if (out.options && out.options.sections &&
-      typeof out.options.sections === 'object' &&
-      !Array.isArray(out.options.sections)){
-    const rewrittenSections = {};
-    for (const [sectionId, sectionState] of Object.entries(out.options.sections)){
-      rewrittenSections[mapPageId(sectionId)] = sectionState;
-    }
-    out.options.sections = rewrittenSections;
-  }
-
-  return out;
-}
-
-function bookmarkReferencedPageIds(bookmarkJson){
-  const ids = new Set();
-  if (!bookmarkJson) return ids;
-
-  const add = value => {
-    if (typeof value === 'string' && value) ids.add(value);
-  };
-
-  if (bookmarkJson.options){
-    add(bookmarkJson.options.activeSection);
-    if (bookmarkJson.options.sections && typeof bookmarkJson.options.sections === 'object'){
-      Object.keys(bookmarkJson.options.sections).forEach(add);
-    }
-  }
-
-  if (bookmarkJson.explorationState){
-    add(bookmarkJson.explorationState.activeSection);
-    if (bookmarkJson.explorationState.sections &&
-        typeof bookmarkJson.explorationState.sections === 'object'){
-      Object.keys(bookmarkJson.explorationState.sections).forEach(add);
-    }
-  }
-
-  return ids;
-}
-
-function makeBookmarkIndexItem(id, sampleItem){
-  // Keep the recipient's existing item shape whenever possible.
-  if (sampleItem && typeof sampleItem === 'object' && !Array.isArray(sampleItem)){
-    const clone = cloneJson(sampleItem);
-    if ('bookmark' in clone) clone.bookmark = id;
-    else if ('name' in clone) clone.name = id;
-    else if ('id' in clone) clone.id = id;
-    else return id;
-    return clone;
-  }
-  return id;
-}
-
-function bookmarkDestinationPath(reportRoot, bookmarkId){
-  return `${reportRoot}/definition/bookmarks/${bookmarkId}.bookmark.json`;
-}
-
 el('mergeBtn').addEventListener('click', async () => {
-  if (!donor.project || !recipient.project || transplantSelected.size === 0) return;
+  if (!donor.project || !recipient.project || tSel.size === 0) return;
 
   el('mergeBtn').disabled = true;
   el('mergeBtn').textContent = 'Merging…';
 
   try {
-    // working = path -> { kind:'file', file:File } | { kind:'text', content:string }
     const working = {};
-    for (const [path, file] of Object.entries(recipient.files)){
-      working[path] = { kind: 'file', file };
-    }
+    for (const [path, file] of Object.entries(recipient.files)) working[path] = { kind: 'file', file };
 
     const existingPageIds = new Set(recipient.project.pages.map(p => p.id));
     const existingBookmarkIds = new Set(recipient.project.bookmarks.map(b => b.id));
     const newPageOrder = [...(recipient.project.pagesMeta.pageOrder || [])];
 
-    // Keep the recipient bookmark index in its existing shape.
-    // PBIR stores bookmark files separately from bookmarks.json, which
-    // contains ordering/group metadata.
-    const sampleItemsSource = recipient.project.bookmarksMeta || donor.project.bookmarksMeta;
-    const sampleItem = sampleItemsSource && Array.isArray(sampleItemsSource.items)
-      ? sampleItemsSource.items[0]
-      : undefined;
-    const newBookmarkItems = recipient.project.bookmarksMeta &&
-      Array.isArray(recipient.project.bookmarksMeta.items)
-      ? [...recipient.project.bookmarksMeta.items]
-      : [];
+    const sampleItem = pickSampleBookmarkItem(recipient.project.bookmarksMeta, donor.project.bookmarksMeta);
+    const newBookmarkItems = recipient.project.bookmarksMeta && Array.isArray(recipient.project.bookmarksMeta.items)
+      ? [...recipient.project.bookmarksMeta.items] : [];
 
-    // Maps donor page ids -> recipient page ids for every page selected
-    // in this merge. Bookmark state will use this map below.
+    // donor page id -> recipient page id, for every page selected in this merge
     const pageIdMap = new Map();
-    const selectedDonorPages = new Set();
-
-    for (const key of transplantSelected){
-      const donorPage = donor.project.pages.find(p => p.path === key);
-      if (!donorPage) continue;
-      const newId = uniqueId(donorPage.id, existingPageIds);
-      pageIdMap.set(donorPage.id, newId);
-      selectedDonorPages.add(donorPage.id);
-      existingPageIds.add(newId);
+    for (const key of tSel){
+      const dp = donor.project.pages.find(p => p.path === key);
+      if (!dp) continue;
+      const nid = uniqueId(dp.id, existingPageIds);
+      pageIdMap.set(dp.id, nid);
+      existingPageIds.add(nid);
     }
 
-    // Reset this because the actual page-copy loop below uses the map.
-    existingPageIds.clear();
-    recipient.project.pages.forEach(p => existingPageIds.add(p.id));
-    for (const mappedId of pageIdMap.values()) existingPageIds.add(mappedId);
-
-    function makeBookmarkItem(id){
-      if (sampleItem && typeof sampleItem === 'object' && sampleItem !== null){
-        const clone = { ...sampleItem };
-        if ('bookmark' in clone) clone.bookmark = id;
-        else if ('name' in clone) clone.name = id;
-        else return id; // unknown shape, fall back to a plain string
-        return clone;
-      }
-      return id; // default: flat array of id strings
-    }
-
-    // per-table working text + running set of measure names, so multiple
-    // transplanted measures into the same table stack correctly
     const tableTextCache = {};
     const tableMeasureNames = {};
     const skippedMeasures = [];
     const bookmarkWarnings = [];
-
     let pagesAdded = 0, bookmarksAdded = 0, measuresAdded = 0;
 
-    for (const key of transplantSelected){
+    for (const key of tSel){
       const donorPage = donor.project.pages.find(p => p.path === key);
       const donorBookmark = donor.project.bookmarks.find(b => b.path === key);
       const donorMeasure = donor.project.measures.find(m => m.id === key);
@@ -1075,68 +992,50 @@ el('mergeBtn').addEventListener('click', async () => {
           if (!path.startsWith(donorPrefix)) continue;
           const rel = path.slice(donorPrefix.length);
           const destPath = `${recipient.project.reportRoot}/definition/pages/${newId}/${rel}`;
-
           if (rel === 'page.json'){
-            const pageJson = await readJSONFrom(donor.files, path) || {};
+            const pageJson = (await readJSONFrom(donor.files, path)) || {};
             pageJson.name = newId;
             working[destPath] = { kind: 'text', content: JSON.stringify(pageJson, null, 2) };
           } else {
             working[destPath] = { kind: 'file', file: donor.files[path] };
           }
         }
-
         newPageOrder.push(newId);
         pagesAdded++;
+
       } else if (donorBookmark){
         const newId = uniqueId(donorBookmark.id, existingBookmarkIds);
         existingBookmarkIds.add(newId);
 
-        const rawBookmark = await readJSONFrom(donor.files, donorBookmark.path) || {};
-        const referencedPages = bookmarkReferencedPageIds(rawBookmark);
-
-        // If the bookmark points at a donor page that is not being copied,
-        // don't pretend it has been made self-contained. It can still be
-        // imported, but warn the user that those references remain donor ids.
-        const missingPageRefs = [...referencedPages]
-          .filter(pageId => donor.project.pages.some(p => p.id === pageId) &&
-                            !pageIdMap.has(pageId));
+        const rawBookmark = (await readJSONFrom(donor.files, donorBookmark.path)) || {};
+        const referenced = bookmarkReferencedPageIds(rawBookmark);
+        const missingPageRefs = [...referenced].filter(pid =>
+          donor.project.pages.some(p => p.id === pid) && !pageIdMap.has(pid));
 
         const bJson = rewriteBookmarkPageReferences(rawBookmark, pageIdMap);
         bJson.name = newId;
-
-        // Preserve the actual PBIR bookmark extension.
-        const destPath = bookmarkDestinationPath(recipient.project.reportRoot, newId);
-        working[destPath] = {
-          kind: 'text',
-          content: JSON.stringify(bJson, null, 2)
+        working[bookmarkDestinationPath(recipient.project.reportRoot, newId)] = {
+          kind: 'text', content: JSON.stringify(bJson, null, 2)
         };
-
         newBookmarkItems.push(makeBookmarkIndexItem(newId, sampleItem));
         bookmarksAdded++;
 
         if (missingPageRefs.length){
-          bookmarkWarnings.push(
-            `${donorBookmark.label} references page(s) not selected for copy: ${missingPageRefs.join(', ')}`
-          );
+          bookmarkWarnings.push(`${donorBookmark.label} references page(s) not selected for copy: ${missingPageRefs.join(', ')}`);
         }
+
       } else if (donorMeasure){
         const targetTable = recipient.project.tables.find(t => t.name === donorMeasure.table);
         if (!targetTable){
           skippedMeasures.push(`${donorMeasure.table} :: ${donorMeasure.name}`);
           continue;
         }
-
         if (!(targetTable.path in tableTextCache)){
-          const existingEntry = working[targetTable.path];
-          const baseText = existingEntry && existingEntry.kind === 'text'
-            ? existingEntry.content
-            : await readTextFrom(recipient.files, targetTable.path);
+          const baseText = await readTextFrom(recipient.files, targetTable.path);
           tableTextCache[targetTable.path] = baseText != null ? baseText : '';
           tableMeasureNames[targetTable.path] = new Set(
-            recipient.project.measures.filter(m => m.table === targetTable.name).map(m => m.name)
-          );
+            recipient.project.measures.filter(m => m.table === targetTable.name).map(m => m.name));
         }
-
         const existingNames = tableMeasureNames[targetTable.path];
         const newName = uniqueMeasureName(donorMeasure.name, existingNames);
         existingNames.add(newName);
@@ -1149,29 +1048,23 @@ el('mergeBtn').addEventListener('click', async () => {
         if (!currentText.endsWith('\n')) currentText += '\n';
         currentText += '\n' + blockLines.join('\n') + '\n';
         tableTextCache[targetTable.path] = currentText;
-
         working[targetTable.path] = { kind: 'text', content: currentText };
         measuresAdded++;
       }
     }
 
-    // rewrite pages.json
     const pagesMetaClone = { ...recipient.project.pagesMeta, pageOrder: newPageOrder };
-    if (!pagesMetaClone.activePageName && newPageOrder.length){
-      pagesMetaClone.activePageName = newPageOrder[0];
-    }
+    if (!pagesMetaClone.activePageName && newPageOrder.length) pagesMetaClone.activePageName = newPageOrder[0];
     working[recipient.project.pagesJsonPath] = { kind: 'text', content: JSON.stringify(pagesMetaClone, null, 2) };
 
-    // rewrite / create bookmarks.json if any bookmarks were added
     if (bookmarksAdded > 0){
-      const bookmarksMetaClone = recipient.project.bookmarksMeta
+      const meta = recipient.project.bookmarksMeta
         ? { ...recipient.project.bookmarksMeta }
         : { "$schema": "https://developer.microsoft.com/json-schemas/fabric/item/report/definition/bookmarks/1.0.0/schema.json" };
-      bookmarksMetaClone.items = newBookmarkItems;
-      working[recipient.project.bookmarksJsonPath] = { kind: 'text', content: JSON.stringify(bookmarksMetaClone, null, 2) };
+      meta.items = newBookmarkItems;
+      working[recipient.project.bookmarksJsonPath] = { kind: 'text', content: JSON.stringify(meta, null, 2) };
     }
 
-    // zip it up
     const zip = new JSZip();
     for (const [path, entry] of Object.entries(working)){
       if (entry.kind === 'text') zip.file(path, entry.content);
@@ -1181,17 +1074,20 @@ el('mergeBtn').addEventListener('click', async () => {
     downloadBlob(blob, 'recipient-merged.zip');
 
     let msg = `Merged ${pagesAdded} page${pagesAdded === 1 ? '' : 's'}, ${bookmarksAdded} bookmark${bookmarksAdded === 1 ? '' : 's'} and ${measuresAdded} measure${measuresAdded === 1 ? '' : 's'} into the recipient`;
-    if (skippedMeasures.length){
-      msg += ` — skipped ${skippedMeasures.length} measure${skippedMeasures.length === 1 ? '' : 's'} (no matching table): ${skippedMeasures.join(', ')}`;
-    }
+    if (skippedMeasures.length) msg += `. Skipped ${skippedMeasures.length} measure${skippedMeasures.length === 1 ? '' : 's'} (no matching table)`;
     if (bookmarkWarnings.length){
-      msg += ` — ${bookmarkWarnings.length} bookmark${bookmarkWarnings.length === 1 ? '' : 's'} have page references to pages you did not copy`;
+      msg += `. ${bookmarkWarnings.length} bookmark${bookmarkWarnings.length === 1 ? '' : 's'} point to pages you did not copy`;
       console.warn('Bookmark warnings:', bookmarkWarnings);
     }
     showToast(msg);
   } finally {
     el('mergeBtn').textContent = 'Merge & download';
-    updateTransplantButtons();
+    updateButtons();
   }
 });
+
+/* ---------- boot ---------- */
+setMode('convert');
 </script>
+</body>
+</html>
